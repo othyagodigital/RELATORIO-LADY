@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório de Tráfego Pago useladyday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: coluna única de leitura, resumo em quatro blocos no topo, detalhe por campanha em seguida. */
+:root{
+  --bg:#f6f3f4;
+  --surface:#ffffff;
+  --ink:#231a20;
+  --muted:#6b5d65;
+  --line:#e2d9dd;
+  --accent:#8a2452;
+  --accent-soft:#f3dfe8;
+  --spend:#a99aa2;
+  --warn:#8f5600;
+  --warn-soft:#fbeed3;
+  --font-display:"Bricolage Grotesque","Trebuchet MS",sans-serif;
+  --font-body:"IBM Plex Sans","Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#181216;--surface:#231a20;--ink:#f2e9ed;--muted:#b3a3ab;--line:#3d2f37;
+    --accent:#e58fb5;--accent-soft:#4a2437;--spend:#75666e;--warn:#f0b955;--warn-soft:#3a2c0e;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#181216;--surface:#231a20;--ink:#f2e9ed;--muted:#b3a3ab;--line:#3d2f37;
+  --accent:#e58fb5;--accent-soft:#4a2437;--spend:#75666e;--warn:#f0b955;--warn-soft:#3a2c0e;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6}
+main{max-width:880px;margin:0 auto;padding:40px 20px 64px;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(1.9rem,5vw,2.7rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.35rem;font-weight:700}
+h3{font-size:1.05rem;font-weight:500}
+p{margin:0;max-width:68ch}
+.num{font-variant-numeric:tabular-nums}
+header{display:flex;flex-direction:column;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:24px}
+.kicker{font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.meta{color:var(--muted);font-size:.92rem}
+section{display:flex;flex-direction:column;gap:16px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:4px}
+.tile .label{font-size:.82rem;color:var(--muted)}
+.tile .value{font-family:var(--font-display);font-size:1.7rem;font-weight:700;line-height:1.1}
+.tile .sub{font-size:.82rem;color:var(--muted)}
+.tile.key{background:var(--accent-soft);border-color:var(--accent)}
+.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;min-width:700px;font-size:.92rem}
+th,td{padding:12px 14px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{font-weight:600;color:var(--muted);font-size:.8rem}
+tfoot td{font-weight:600;border-top:2px solid var(--ink)}
+tfoot tr:last-child td{border-bottom:0;border-top:0;font-weight:400;color:var(--muted)}
+.pill{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:middle;white-space:nowrap}
+.pill.on{background:var(--accent-soft);color:var(--accent)}
+.pill.off{background:var(--warn-soft);color:var(--warn)}
+.bars{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px;display:flex;flex-direction:column;gap:20px}
+.bar-group{display:flex;flex-direction:column;gap:6px}
+.bar-row{display:grid;grid-template-columns:110px 1fr 56px;gap:10px;align-items:center;font-size:.85rem}
+.bar-row span:first-child{color:var(--muted)}
+.track{height:14px;background:var(--bg);border-radius:3px;overflow:hidden}
+.fill{height:100%;border-radius:3px}
+.fill.spend{background:var(--spend)}
+.fill.rev{background:var(--accent)}
+.bar-row .num{text-align:right;font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.card p{font-size:.94rem}
+.note{background:var(--warn-soft);border-left:4px solid var(--warn);border-radius:0 6px 6px 0;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.note strong{color:var(--warn)}
+ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:10px;max-width:68ch}
+footer{color:var(--muted);font-size:.84rem;border-top:1px solid var(--line);padding-top:20px;display:flex;flex-direction:column;gap:6px}
+@media (max-width:480px){.bar-row{grid-template-columns:84px 1fr 50px}}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <span class="kicker">Relatório de tráfego pago</span>
+  <h1>useladyday, resultados dos últimos 25 dias</h1>
+  <p class="meta">Meta Ads (Facebook e Instagram) · 4 campanhas · Emitido em 13 de novembro de 2026</p>
+</header>
+
+<section>
+  <h2>Resumo do período</h2>
+  <div class="tiles">
+    <div class="tile"><span class="label">Investimento total</span><span class="value num">R$ 2.283,32</span><span class="sub num">R$ 1.986,36 em campanhas de venda</span></div>
+    <div class="tile"><span class="label">Compras no site</span><span class="value num">27</span><span class="sub num">R$ 73,57 por compra</span></div>
+    <div class="tile"><span class="label">Receita atribuída</span><span class="value num">R$ 16.879,14</span><span class="sub num">Ticket médio de R$ 625,15</span></div>
+    <div class="tile key"><span class="label">ROAS das campanhas de venda</span><span class="value num">8,50</span><span class="sub num">7,39 considerando todo o investimento</span></div>
+  </div>
+  <p>Nos últimos 25 dias, as campanhas de venda geraram 27 compras e R$ 16.879,14 em receita atribuída, com R$ 1.986,36 de investimento. Cada real aplicado nessas campanhas retornou R$ 8,50 em vendas. Somando a campanha do grupo de atacado no WhatsApp, cujo resultado não é medido em compras no site, o investimento total foi de R$ 2.283,32 e o retorno geral ficou em 7,39.</p>
+</section>
+
+<section>
+  <h2>Desempenho por campanha</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Campanha</th><th>Investimento</th><th>Compras</th><th>Receita</th><th>Custo por compra</th><th>Ticket médio</th><th>ROAS</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>VENDAS - no SITE <span class="pill on">Ativa</span></td><td class="num">R$ 1.057,88</td><td class="num">15</td><td class="num">R$ 9.777,64</td><td class="num">R$ 70,53</td><td class="num">R$ 651,84</td><td class="num">9,24</td></tr>
+        <tr><td>VENDAS - SITE [QUENTE 30] [COMPRAS] <span class="pill on">Ativa</span></td><td class="num">R$ 904,16</td><td class="num">11</td><td class="num">R$ 6.627,50</td><td class="num">R$ 82,20</td><td class="num">R$ 602,50</td><td class="num">7,33</td></tr>
+        <tr><td>GRUPO ATACADO - WHATSAPP <span class="pill on">Ativa</span></td><td class="num">R$ 296,96</td><td class="num">n/d</td><td class="num">n/d</td><td class="num">n/d</td><td class="num">n/d</td><td class="num">n/d</td></tr>
+        <tr><td>VENDAS - OUTUBRO/NOVEMBRO [1] — SJ <span class="pill off">Desativada</span></td><td class="num">R$ 24,32</td><td class="num">1</td><td class="num">R$ 474,00</td><td class="num">R$ 24,32</td><td class="num">R$ 474,00</td><td class="num">19,49</td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td>Total</td><td class="num">R$ 2.283,32</td><td class="num">27</td><td class="num">R$ 16.879,14</td><td class="num">R$ 84,57</td><td class="num">R$ 625,15</td><td class="num">7,39</td></tr>
+        <tr><td>Somente campanhas de venda</td><td class="num">R$ 1.986,36</td><td class="num">27</td><td class="num">R$ 16.879,14</td><td class="num">R$ 73,57</td><td class="num">R$ 625,15</td><td class="num">8,50</td></tr>
+      </tfoot>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Participação no investimento e na receita</h2>
+  <div class="bars">
+    <div class="bar-group">
+      <h3>VENDAS - no SITE</h3>
+      <div class="bar-row"><span>Investimento</span><div class="track"><div class="fill spend" style="width:46.3%"></div></div><span class="num">46,3%</span></div>
+      <div class="bar-row"><span>Receita</span><div class="track"><div class="fill rev" style="width:57.9%"></div></div><span class="num">57,9%</span></div>
+    </div>
+    <div class="bar-group">
+      <h3>VENDAS - SITE [QUENTE 30] [COMPRAS]</h3>
+      <div class="bar-row"><span>Investimento</span><div class="track"><div class="fill spend" style="width:39.6%"></div></div><span class="num">39,6%</span></div>
+      <div class="bar-row"><span>Receita</span><div class="track"><div class="fill rev" style="width:39.3%"></div></div><span class="num">39,3%</span></div>
+    </div>
+    <div class="bar-group">
+      <h3>GRUPO ATACADO - WHATSAPP</h3>
+      <div class="bar-row"><span>Investimento</span><div class="track"><div class="fill spend" style="width:13%"></div></div><span class="num">13,0%</span></div>
+      <div class="bar-row"><span>Receita</span><div class="track"><div class="fill rev" style="width:0%"></div></div><span class="num">0,0%</span></div>
+    </div>
+    <div class="bar-group">
+      <h3>VENDAS - OUTUBRO/NOVEMBRO [1] — SJ</h3>
+      <div class="bar-row"><span>Investimento</span><div class="track"><div class="fill spend" style="width:1.1%"></div></div><span class="num">1,1%</span></div>
+      <div class="bar-row"><span>Receita</span><div class="track"><div class="fill rev" style="width:2.8%"></div></div><span class="num">2,8%</span></div>
+    </div>
+  </div>
+  <p>A campanha VENDAS - no SITE recebeu 46,3% da verba e respondeu por 57,9% da receita. A campanha QUENTE 30 devolveu em receita a mesma proporção que recebeu em investimento.</p>
+</section>
+
+<section>
+  <h2>Análise</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>VENDAS - no SITE é a campanha mais eficiente</h3>
+      <p>Gerou 15 compras e R$ 9.777,64 com R$ 1.057,88 investidos. O custo por compra de R$ 70,53 é 14% menor que o da campanha QUENTE 30, e o ticket médio de R$ 651,84 é o mais alto entre as campanhas com volume.</p>
+    </div>
+    <div class="card">
+      <h3>QUENTE 30 tem bom retorno, abaixo do esperado para público aquecido</h3>
+      <p>Foram 11 compras e R$ 6.627,50 para R$ 904,16 de investimento, com ROAS de 7,33. Campanhas voltadas a quem já interagiu com a marca costumam ter o menor custo por compra da conta. Aqui o custo foi de R$ 82,20, o que sugere público pequeno ou anúncios já muito vistos.</p>
+    </div>
+    <div class="card">
+      <h3>Grupo de atacado sem resultado mensurado neste relatório</h3>
+      <p>A campanha consumiu R$ 296,96, equivalentes a 13% da verba. Como o objetivo é levar pessoas ao grupo no WhatsApp, as vendas de atacado não aparecem como compras no site e precisam de acompanhamento próprio.</p>
+    </div>
+    <div class="card">
+      <h3>Campanha SJ teve resultado pontual</h3>
+      <p>Com R$ 24,32 investidos, registrou uma compra de R$ 474,00 e ROAS de 19,49. O dado é positivo, mas uma única venda não permite conclusão. A campanha está desativada.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Pontos de atenção</h2>
+  <div class="note">
+    <strong>Receita atribuída pela plataforma</strong>
+    <p>Os valores de receita são os registrados pelo Gerenciador de Anúncios. Recomenda-se conferir as 27 compras com os pedidos pagos na loja no mesmo período.</p>
+  </div>
+  <div class="note">
+    <strong>Atacado depende de controle fora da plataforma</strong>
+    <p>Sem o registro de quantas pessoas entraram no grupo e de quantos pedidos de atacado foram fechados, não é possível afirmar se os R$ 296,96 trouxeram retorno.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Próximos passos recomendados</h2>
+  <ol>
+    <li><strong>Direcionar mais verba para VENDAS - no SITE.</strong> Aumentos de 20% a 30% a cada três ou quatro dias, acompanhando o custo por compra a cada ajuste.</li>
+    <li><strong>Renovar os anúncios da campanha QUENTE 30.</strong> Verificar a frequência de exibição e substituir os criativos mais antigos, mantendo a campanha ativa.</li>
+    <li><strong>Criar um controle para o grupo de atacado.</strong> Registrar entradas no grupo e pedidos fechados por semana, para calcular o custo por novo contato e o retorno real.</li>
+    <li><strong>Reativar a campanha SJ com verba de teste.</strong> Um período curto com orçamento limitado mostra se o resultado se repete.</li>
+    <li><strong>Incluir indicadores de funil no próximo relatório.</strong> Alcance, frequência, taxa de cliques e custo por clique permitem identificar em que etapa cada campanha perde eficiência.</li>
+  </ol>
+</section>
+
+<footer>
+  <span>Fonte: Gerenciador de Anúncios da Meta, colunas Valor gasto, Compras no site, Valor de conversão de compras e ROAS de compras.</span>
+  <span>Cálculos: custo por compra = investimento ÷ compras · ticket médio = receita ÷ compras · ROAS = receita ÷ investimento.</span>
+</footer>
+
+</main>
+</body>
+</html>
